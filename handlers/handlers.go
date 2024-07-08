@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func HelloHandler(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +22,11 @@ func ArticleListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ArticleDetailHandler(w http.ResponseWriter, r *http.Request) {
-	articleID := 1
+	articleID, err := strconv.Atoi(mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, "Invalid article ID", http.StatusBadRequest)
+		return
+	}
 	resString := fmt.Sprintf("Article No.%d\n", articleID)
 	io.WriteString(w, resString)
 }
