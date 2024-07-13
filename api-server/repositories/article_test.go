@@ -5,13 +5,14 @@ import (
 
 	"github.com/ShinnosukeSuzuki/practice-golang-api/models"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/repositories"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/repositories/testdata"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 // SelectArticleList関数のテスト
 func TestSelectArticleList(t *testing.T) {
-	expectedNum := 2
+	expectedNum := len(testdata.ArticleTrstData)
 	got, err := repositories.SelectArticleList(testDB, 1)
 	if err != nil {
 		t.Fatal(err)
@@ -31,22 +32,10 @@ func TestSelectArticleDetail(t *testing.T) {
 	}{
 		{
 			testTitle: "subtest1",
-			expected: models.Article{
-				ID:       1,
-				Title:    "firstPost",
-				Contents: "This is my first blog",
-				UserName: "saki",
-				NiceNum:  3,
-			},
+			expected:  testdata.ArticleTrstData[0],
 		}, {
 			testTitle: "subtest2",
-			expected: models.Article{
-				ID:       2,
-				Title:    "2nd",
-				Contents: "Second blog post",
-				UserName: "saki",
-				NiceNum:  4,
-			},
+			expected:  testdata.ArticleTrstData[1],
 		},
 	}
 
@@ -103,4 +92,22 @@ func TestInsertArticle(t *testing.T) {
 		`
 		testDB.Exec(sqlDeleteArticle, article.Title, article.Contents, article.UserName)
 	})
+}
+
+// UpdateNiceNum 関数のテスト
+func TestUpdateNiceNum(t *testing.T) {
+	articleID := 1
+	// いいね数を1増やす
+	err := repositories.UpdateNiceNum(testDB, articleID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// articleID=1の記事の詳細を取得
+	got, _ := repositories.SelectArticleDetail(testDB, articleID)
+
+	// 更新後のデータと元のテストデータのいいね数の差が1でない場合はエラー
+	if got.NiceNum-testdata.ArticleTrstData[articleID-1].NiceNum != 1 {
+		t.Errorf("fail to update nice num: expected %d but got %d\\n", testdata.ArticleTrstData[articleID-1].NiceNum+1, got.NiceNum)
+	}
 }
