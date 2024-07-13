@@ -19,34 +19,22 @@ func main() {
 	}
 	defer db.Close()
 
-	articleID := 100
+	article := models.Article{
+		Title:    "insert test",
+		Contents: "Can I insert data correctly?",
+		UserName: "hogehoge",
+	}
 	const sqlStr = `
-		SELECT *
-		FROM articles
-		where article_id = ?;
+		INSERT INTO articles (title, contents, username, nice, created_at)
+		VALUES (?, ?, ?, 0, NOW());
 	`
 
-	row := db.QueryRow(sqlStr, articleID)
-	if err := row.Err(); err != nil {
-		// データ取得件数が0件の場合はデータ読み出し処理に移らずに終了
-		fmt.Println(err)
-		return
-	}
-
-	var article models.Article
-	var createdTimme sql.NullTime
-
-	// Scanメソッドで取得したデータを構造体に格納
-	err = row.Scan(&article.ID, &article.Title, &article.Contents, &article.UserName, &article.NiceNum, &createdTimme)
+	result, err := db.Exec(sqlStr, article.Title, article.Contents, article.UserName)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	// createdTimmeがnullではない場合は、article.CreatedAtに格納
-	if createdTimme.Valid {
-		article.CreatedAt = createdTimme.Time
-	}
-
-	fmt.Printf("%+v\n", article)
+	fmt.Println(result.LastInsertId())
+	fmt.Println(result.RowsAffected())
 }
