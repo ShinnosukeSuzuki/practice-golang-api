@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/ShinnosukeSuzuki/practice-golang-api/models"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/services"
 	"github.com/gorilla/mux"
 )
 
@@ -22,7 +22,11 @@ func PostArticleHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
 	}
 
-	article := reqArticle
+	article, err := services.PostArticleService(reqArticle)
+	if err != nil {
+		http.Error(w, "fail to post article\n", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(article)
 }
@@ -42,8 +46,11 @@ func ArticleListHandler(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 
-	log.Println(page)
-	articleList := []models.Article{models.Article1, models.Article2}
+	articleList, err := services.GetArticleListService(page)
+	if err != nil {
+		http.Error(w, "fail to get article list\n", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(articleList)
 }
 
@@ -54,9 +61,11 @@ func ArticleDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(articleID)
-
-	article := models.Article1
+	article, err := services.GetArticleService(articleID)
+	if err != nil {
+		http.Error(w, "fail to get article detail\n", http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(article)
 }
@@ -67,7 +76,11 @@ func PostNiceHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
 	}
 
-	article := reqArticle
+	article, err := services.PostNiceService(reqArticle)
+	if err != nil {
+		http.Error(w, "fail to post nice\n", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(article)
 }
 
@@ -77,6 +90,10 @@ func PostCommentHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
 	}
 
-	comment := reqComment
+	comment, err := services.PostCommentService(reqComment)
+	if err != nil {
+		http.Error(w, "fail to post comment\n", http.StatusInternalServerError)
+		return
+	}
 	json.NewEncoder(w).Encode(comment)
 }
