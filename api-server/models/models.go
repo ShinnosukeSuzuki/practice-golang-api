@@ -10,7 +10,7 @@ type Comment struct {
 }
 
 type Article struct {
-	ID          int       `json:"artocle_id"`
+	ID          int       `json:"article_id"`
 	Title       string    `json:"title"`
 	Contents    string    `json:"contents"`
 	UserName    string    `json:"user_name"`
