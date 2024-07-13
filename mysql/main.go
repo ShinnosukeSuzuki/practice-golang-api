@@ -19,33 +19,34 @@ func main() {
 	}
 	defer db.Close()
 
+	articleID := 100
 	const sqlStr = `
 		SELECT *
-		FROM articles;
+		FROM articles
+		where article_id = ?;
 	`
-	rows, err := db.Query(sqlStr)
+
+	row := db.QueryRow(sqlStr, articleID)
+	if err := row.Err(); err != nil {
+		// データ取得件数が0件の場合はデータ読み出し処理に移らずに終了
+		fmt.Println(err)
+		return
+	}
+
+	var article models.Article
+	var createdTimme sql.NullTime
+
+	// Scanメソッドで取得したデータを構造体に格納
+	err = row.Scan(&article.ID, &article.Title, &article.Contents, &article.UserName, &article.NiceNum, &createdTimme)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer rows.Close()
 
-	articleArrray := make([]models.Article, 0)
-	for rows.Next() {
-		var article models.Article
-		var createdTimme sql.NullTime
-		err := rows.Scan(&article.ID, &article.Title, &article.Contents, &article.UserName, &article.NiceNum, &createdTimme)
-
-		if createdTimme.Valid {
-			article.CreatedAt = createdTimme.Time
-		}
-
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			articleArrray = append(articleArrray, article)
-		}
+	// createdTimmeがnullではない場合は、article.CreatedAtに格納
+	if createdTimme.Valid {
+		article.CreatedAt = createdTimme.Time
 	}
 
-	fmt.Printf("%+v\n", articleArrray)
+	fmt.Printf("%+v\n", article)
 }
