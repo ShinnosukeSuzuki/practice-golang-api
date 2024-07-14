@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ShinnosukeSuzuki/practice-golang-api/controllers"
-	"github.com/ShinnosukeSuzuki/practice-golang-api/routers"
-	"github.com/ShinnosukeSuzuki/practice-golang-api/services"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/api"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -29,14 +27,8 @@ func main() {
 		return
 	}
 
-	// sql.DB型を元に、サーバー全体で使用するサービス構造体MyAppServiceを1つ生成
-	ser := services.NewMyAppService(db)
-
-	// MyAppService型を元に、コントローラー全体で使用するコントローラ構造体MyAppControllerを1つ生成
-	con := controllers.NewMyAppController(ser)
-
 	// コントローラ型MyAppControllerのハンドラメソッドとパスを紐付け
-	r := routers.NewRouter(con)
+	r := api.NewRouter(db)
 
 	log.Println("server start at :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
