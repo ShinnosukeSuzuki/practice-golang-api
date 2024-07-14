@@ -1,23 +1,34 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
-	"github.com/ShinnosukeSuzuki/practice-golang-api/handlers"
-	"github.com/gorilla/mux"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/api"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+var (
+	dbUser     = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbDatabase = os.Getenv("DB_NAME")
+	dbConn     = fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
 )
 
 func main() {
+	// DB接続
+	db, err := sql.Open("mysql", dbConn)
+	if err != nil {
+		log.Println("failed to connect database")
+		return
+	}
 
-	r := mux.NewRouter()
-
-	r.HandleFunc("/hello", handlers.HelloHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article", handlers.PostArticleHandler).Methods(http.MethodPost)
-	r.HandleFunc("/article/list", handlers.ArticleListHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article/{id:[0-9]+}", handlers.ArticleDetailHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article/nice", handlers.PostNiceHandler).Methods(http.MethodPost)
-	r.HandleFunc("/comment", handlers.PostCommentHandler).Methods(http.MethodPost)
+	// コントローラ型MyAppControllerのハンドラメソッドとパスを紐付け
+	r := api.NewRouter(db)
 
 	log.Println("server start at :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
