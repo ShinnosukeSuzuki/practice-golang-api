@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/ShinnosukeSuzuki/practice-golang-api/controllers"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/routers"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/services"
-	"github.com/gorilla/mux"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -36,14 +36,7 @@ func main() {
 	con := controllers.NewMyAppController(ser)
 
 	// コントローラ型MyAppControllerのハンドラメソッドとパスを紐付け
-	r := mux.NewRouter()
-
-	r.HandleFunc("/hello", con.HelloHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article", con.PostArticleHandler).Methods(http.MethodPost)
-	r.HandleFunc("/article/list", con.ArticleListHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article/{id:[0-9]+}", con.ArticleDetailHandler).Methods(http.MethodGet)
-	r.HandleFunc("/article/nice", con.PostNiceHandler).Methods(http.MethodPost)
-	r.HandleFunc("/comment", con.PostCommentHandler).Methods(http.MethodPost)
+	r := routers.NewRouter(con)
 
 	log.Println("server start at :8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
