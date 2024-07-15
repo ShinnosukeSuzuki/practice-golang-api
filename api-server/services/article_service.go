@@ -3,7 +3,6 @@ package services
 import (
 	"database/sql"
 	"errors"
-	"sync"
 
 	"github.com/ShinnosukeSuzuki/practice-golang-api/apperrors"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/models"
@@ -12,38 +11,52 @@ import (
 
 // ハンドラ ArticleDetailHandler 用のサービス関数
 func (s *MyAppService) GetArticleService(articleID int) (models.Article, error) {
-	// 並列処理でarticleとcommentListを取得
+	// 並行処理でarticleとcommentListを取得
 
 	var article models.Article
 	var commentList []models.Comment
 	var articleGetErr, commentGetErr error
 
-	// それぞれをMutexで保護
-	var amu sync.Mutex
-	var cmu sync.Mutex
-
-	// メインゴールーチンの終了を待つ
-	var wg sync.WaitGroup
-	wg.Add(2)
+	// Article型とerror型を同時に扱うための構造体
+	type articleResult struct {
+		article models.Article
+		err     error
+	}
+	// articleResult型のチャネルを定義
+	articleChan := make(chan articleResult)
+	defer close(articleChan)
 
 	// articleIDに一致する記事の詳細情報を取得
-	go func(db *sql.DB, articleID int) {
-		defer wg.Done()
-		amu.Lock()
+	// articleChanを通じて、SelectArticleDetail関数の結果を送信
+	go func(ch chan<- articleResult, db *sql.DB, articleID int) {
 		article, articleGetErr = repositories.SelectArticleDetail(db, articleID)
-		amu.Unlock()
-	}(s.db, articleID)
+		ch <- articleResult{article: article, err: articleGetErr}
+	}(articleChan, s.db, articleID)
+
+	// Comment型とerror型を同時に扱うための構造体
+	type commentResult struct {
+		commentList []models.Comment
+		err         error
+	}
+	// commentResult型のチャネルを定義
+	commentChan := make(chan commentResult)
+	defer close(commentChan)
 
 	// articleIDに一致する記事のコメント情報を取得
-	go func(db *sql.DB, articleID int) {
-		defer wg.Done()
-		cmu.Lock()
+	// commentChanを通じて、SelectCommentList関数の結果を送信
+	go func(ch chan<- commentResult, db *sql.DB, articleID int) {
 		commentList, commentGetErr = repositories.SelectCommentList(db, articleID)
-		cmu.Unlock()
-	}(s.db, articleID)
+		ch <- commentResult{commentList: commentList, err: commentGetErr}
+	}(commentChan, s.db, articleID)
 
-	// 両方のゴールーチンが終了するまで待つ
-	wg.Wait()
+	for i := 0; i < 2; i++ {
+		select {
+		case ar := <-articleChan:
+			article, articleGetErr = ar.article, ar.err
+		case cr := <-commentChan:
+			commentList, commentGetErr = cr.commentList, cr.err
+		}
+	}
 
 	if articleGetErr != nil {
 		if errors.Is(articleGetErr, sql.ErrNoRows) {
