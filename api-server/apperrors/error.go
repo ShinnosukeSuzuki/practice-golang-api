@@ -4,7 +4,7 @@ package apperrors
 type MyAppError struct {
 	ErrCode
 	Message string
-	Err     error
+	Err     error `json:"-"` // エラー情報はJSONに含めない
 }
 
 // エラーメソッドを定義

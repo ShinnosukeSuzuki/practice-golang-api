@@ -33,13 +33,13 @@ func (c *ArticleController) PostArticleHandler(w http.ResponseWriter, r *http.Re
 	var reqArticle models.Article
 
 	if err := json.NewDecoder(r.Body).Decode(&reqArticle); err != nil {
-		apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
-		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
+		err = apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
+		apperrors.ErrorHandler(w, r, err)
 	}
 
 	article, err := c.service.PostArticleService(reqArticle)
 	if err != nil {
-		http.Error(w, "fail to post article\n", http.StatusInternalServerError)
+		apperrors.ErrorHandler(w, r, err)
 		return
 	}
 
@@ -55,8 +55,8 @@ func (c *ArticleController) ArticleListHandler(w http.ResponseWriter, r *http.Re
 		var err error
 		page, err = strconv.Atoi(p[0])
 		if err != nil {
-			apperrors.BadParam.Wrap(err, "queryparam must be number")
-			http.Error(w, "Invalid query parameter", http.StatusBadRequest)
+			err = apperrors.BadParam.Wrap(err, "queryparam must be number")
+			apperrors.ErrorHandler(w, r, err)
 			return
 		}
 	} else {
@@ -65,7 +65,7 @@ func (c *ArticleController) ArticleListHandler(w http.ResponseWriter, r *http.Re
 
 	articleList, err := c.service.GetArticleListService(page)
 	if err != nil {
-		http.Error(w, "fail to get article list\n", http.StatusInternalServerError)
+		apperrors.ErrorHandler(w, r, err)
 		return
 	}
 	json.NewEncoder(w).Encode(articleList)
@@ -75,14 +75,14 @@ func (c *ArticleController) ArticleListHandler(w http.ResponseWriter, r *http.Re
 func (c *ArticleController) ArticleDetailHandler(w http.ResponseWriter, r *http.Request) {
 	articleID, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
-		apperrors.BadParam.Wrap(err, "pathparam must be number")
-		http.Error(w, "Invalid article ID", http.StatusBadRequest)
+		err = apperrors.BadParam.Wrap(err, "pathparam must be number")
+		apperrors.ErrorHandler(w, r, err)
 		return
 	}
 
 	article, err := c.service.GetArticleService(articleID)
 	if err != nil {
-		http.Error(w, "fail to get article detail\n", http.StatusInternalServerError)
+		apperrors.ErrorHandler(w, r, err)
 		return
 	}
 
@@ -93,13 +93,13 @@ func (c *ArticleController) ArticleDetailHandler(w http.ResponseWriter, r *http.
 func (c *ArticleController) PostNiceHandler(w http.ResponseWriter, r *http.Request) {
 	var reqArticle models.Article
 	if err := json.NewDecoder(r.Body).Decode(&reqArticle); err != nil {
-		apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
-		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
+		err = apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
+		apperrors.ErrorHandler(w, r, err)
 	}
 
 	article, err := c.service.PostNiceService(reqArticle)
 	if err != nil {
-		http.Error(w, "fail to post nice\n", http.StatusInternalServerError)
+		apperrors.ErrorHandler(w, r, err)
 		return
 	}
 	json.NewEncoder(w).Encode(article)
