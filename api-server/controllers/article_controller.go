@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ShinnosukeSuzuki/practice-golang-api/apperrors"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/controllers/services"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/models"
 	"github.com/gorilla/mux"
@@ -32,6 +33,7 @@ func (c *ArticleController) PostArticleHandler(w http.ResponseWriter, r *http.Re
 	var reqArticle models.Article
 
 	if err := json.NewDecoder(r.Body).Decode(&reqArticle); err != nil {
+		apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
 		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
 	}
 
@@ -53,6 +55,7 @@ func (c *ArticleController) ArticleListHandler(w http.ResponseWriter, r *http.Re
 		var err error
 		page, err = strconv.Atoi(p[0])
 		if err != nil {
+			apperrors.BadParam.Wrap(err, "queryparam must be number")
 			http.Error(w, "Invalid query parameter", http.StatusBadRequest)
 			return
 		}
@@ -72,6 +75,7 @@ func (c *ArticleController) ArticleListHandler(w http.ResponseWriter, r *http.Re
 func (c *ArticleController) ArticleDetailHandler(w http.ResponseWriter, r *http.Request) {
 	articleID, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
+		apperrors.BadParam.Wrap(err, "pathparam must be number")
 		http.Error(w, "Invalid article ID", http.StatusBadRequest)
 		return
 	}
@@ -89,6 +93,7 @@ func (c *ArticleController) ArticleDetailHandler(w http.ResponseWriter, r *http.
 func (c *ArticleController) PostNiceHandler(w http.ResponseWriter, r *http.Request) {
 	var reqArticle models.Article
 	if err := json.NewDecoder(r.Body).Decode(&reqArticle); err != nil {
+		apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
 		http.Error(w, "fail to decode json\n", http.StatusBadRequest)
 	}
 
