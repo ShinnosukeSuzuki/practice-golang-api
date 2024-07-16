@@ -24,8 +24,12 @@ func (w *resLoggingWriter) WriteHeader(code int) {
 
 func LoggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		traceID := newTraceID()
 		// リクエスト情報をロギング
-		log.Println(r.URL.Path, r.Method)
+		log.Printf("[%d]%s %s\n", traceID, r.RequestURI, r.Method)
+
+		ctx := SetTraceID(r.Context(), traceID)
+		r = r.WithContext(ctx)
 
 		// 自作のResponseWriterを作成
 		rlw := NewResLoggingWriter(w)
@@ -34,6 +38,6 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(rlw, r)
 
 		// 自作ResponseWriterからロギングしたいデータを出す
-		log.Println("res: ", rlw.code)
+		log.Printf("[%d]res: %d", traceID, rlw.code)
 	})
 }
