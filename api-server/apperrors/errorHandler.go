@@ -3,7 +3,10 @@ package apperrors
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
+
+	"github.com/ShinnosukeSuzuki/practice-golang-api/api/middlewares"
 )
 
 func ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
@@ -16,6 +19,9 @@ func ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
 			Err:     err,
 		}
 	}
+
+	traceID := middlewares.GetTraceID(r.Context())
+	log.Printf("[%d] ERROR: %+v\n", traceID, appErr)
 
 	var statusCode int
 	switch appErr.ErrCode {

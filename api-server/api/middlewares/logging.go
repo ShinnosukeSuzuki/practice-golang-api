@@ -28,6 +28,9 @@ func LoggingMiddleware(next http.Handler) http.Handler {
 		// リクエスト情報をロギング
 		log.Printf("[%d]%s %s\n", traceID, r.RequestURI, r.Method)
 
+		ctx := SetTraceID(r.Context(), traceID)
+		r = r.WithContext(ctx)
+
 		// 自作のResponseWriterを作成
 		rlw := NewResLoggingWriter(w)
 
