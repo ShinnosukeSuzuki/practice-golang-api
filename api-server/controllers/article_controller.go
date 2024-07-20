@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
 
 	"github.com/ShinnosukeSuzuki/practice-golang-api/apperrors"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/common"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/controllers/services"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/models"
 	"github.com/gorilla/mux"
@@ -35,6 +37,14 @@ func (c *ArticleController) PostArticleHandler(w http.ResponseWriter, r *http.Re
 	if err := json.NewDecoder(r.Body).Decode(&reqArticle); err != nil {
 		err = apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
 		apperrors.ErrorHandler(w, r, err)
+		return
+	}
+
+	authedUsername := common.GetUserName(r.Context())
+	if reqArticle.UserName != authedUsername {
+		err := apperrors.NotMatchUser.Wrap(errors.New("does not match reqBody user and idtoken user"), "invalid user")
+		apperrors.ErrorHandler(w, r, err)
+		return
 	}
 
 	article, err := c.service.PostArticleService(reqArticle)
@@ -95,6 +105,7 @@ func (c *ArticleController) PostNiceHandler(w http.ResponseWriter, r *http.Reque
 	if err := json.NewDecoder(r.Body).Decode(&reqArticle); err != nil {
 		err = apperrors.ReqBodyDecodeFailed.Wrap(err, "bad request body")
 		apperrors.ErrorHandler(w, r, err)
+		return
 	}
 
 	article, err := c.service.PostNiceService(reqArticle)
