@@ -6,7 +6,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ShinnosukeSuzuki/practice-golang-api/api/middlewares"
+	"github.com/ShinnosukeSuzuki/practice-golang-api/common"
 )
 
 func ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
@@ -20,7 +20,7 @@ func ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
 		}
 	}
 
-	traceID := middlewares.GetTraceID(r.Context())
+	traceID := common.GetTraceID(r.Context())
 	log.Printf("[%d] ERROR: %+v\n", traceID, appErr)
 
 	var statusCode int
@@ -29,6 +29,10 @@ func ErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
 		statusCode = http.StatusNotFound
 	case NoTargetData, ReqBodyDecodeFailed, BadParam:
 		statusCode = http.StatusBadRequest
+	case RequiredAuthorizationHeader, Unauthorizated:
+		statusCode = http.StatusUnauthorized
+	case NotMatchUser:
+		statusCode = http.StatusForbidden
 	default:
 		statusCode = http.StatusInternalServerError
 	}
