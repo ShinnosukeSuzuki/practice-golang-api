@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ShinnosukeSuzuki/practice-golang-api/apperrors"
 	"github.com/ShinnosukeSuzuki/practice-golang-api/common"
@@ -27,6 +28,7 @@ func NewArticleController(s services.ArticleServicer) *ArticleController {
 // ハンドラメソッドを定義
 // GET /hello
 func (c *ArticleController) HelloHandler(w http.ResponseWriter, r *http.Request) {
+	time.Sleep(10 * time.Second)
 	io.WriteString(w, "Hello, world!\n")
 }
 
